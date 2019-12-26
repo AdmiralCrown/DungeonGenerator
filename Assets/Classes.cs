@@ -13,28 +13,25 @@ namespace DungeonGeneratorClasses
 	//#####################################################################################################
 	public class Room
 	{
-		private string type;
-		private bool[] connections;
 		//Up 0, Right 1, Down 2, Left 3
+		private string type;
 		private Color color;
 		private double emptyness;
 		private char symbol;
 
 		#region constructor_getter_setter
 
-		public Room (string type, bool[] connections, Color color, double emptyness, char symbol)
+		public Room (string type, Color color, double emptyness, char symbol)
 		{
 			this.type = type;
-			this.connections = connections;
 			this.color = color;
 			this.emptyness = emptyness;
 			this.symbol = symbol;
 		}
 
-		public Room (string type, bool[] connections, Color color, double emptyness)
+		public Room (string type, Color color, double emptyness)
 		{
 			this.type = type;
-			this.connections = connections;
 			this.color = color;
 			this.emptyness = emptyness;
 			this.symbol = ' ';
@@ -43,7 +40,6 @@ namespace DungeonGeneratorClasses
 		public Room ()
 		{
 			this.type = "empty";
-			this.connections = new bool[]{ true, true, true, true };
 			this.color = new Color (0, 0, 0);
 			this.emptyness = 100.0;
 			this.symbol = ' ';
@@ -52,11 +48,6 @@ namespace DungeonGeneratorClasses
 		public string Type {
 			get { return type; }
 			set { type = value; }
-		}
-
-		public bool[] Connections {
-			get { return connections; }
-			set { connections = value; }
 		}
 
 		public Color Color {
@@ -124,7 +115,7 @@ namespace DungeonGeneratorClasses
 			this.xRoomCornerMax = 0;
 			this.yRoomCornerMin = 0;
 			this.yRoomCornerMax = 0;
-			this.roomPossible = false;
+			this.roomPossible = true;
 			this.xExit = 0;
 			this.yExit = 0;
 		}
