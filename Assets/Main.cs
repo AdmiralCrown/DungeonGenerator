@@ -133,8 +133,6 @@ public class Main : MonoBehaviour
 	{
 		roomDimension rDim = spaceforRoom (UnityEngine.Random.Range (3, 9), UnityEngine.Random.Range (3, 9)); //ATM nur gerade
 
-		print ("xmin: " + rDim.XRoomCornerMin + " ymin: " + rDim.YRoomCornerMin + " xmax: " + rDim.XRoomCornerMax + " ymax: " + rDim.YRoomCornerMax + " possible: " + rDim.RoomPossible);
-
 		int[] roomExit = new int[3];
 
 		if (rDim.RoomPossible == true) {
@@ -152,6 +150,7 @@ public class Main : MonoBehaviour
 			calculateEmptyness ();
 
 			print ("x: " + nextWay [0] + " y: " + nextWay [1] + " emptyness: " + roomTiles [nextWay [0], nextWay [1]].Emptyness);
+			//print ("xmin: " + rDim.XRoomCornerMin + " ymin: " + rDim.YRoomCornerMin + " xmax: " + rDim.XRoomCornerMax + " ymax: " + rDim.YRoomCornerMax + " possible: " + rDim.RoomPossible);
 
 			return roomExit;
 		} else {
@@ -203,11 +202,11 @@ public class Main : MonoBehaviour
 		default:
 			break;
 		}
-		if (rDim.XRoomCornerMax > xDimension || rDim.YRoomCornerMax > yDimension || rDim.XRoomCornerMin < 0 || rDim.YRoomCornerMin < 0) {
+		if (rDim.XRoomCornerMax >= xDimension || rDim.YRoomCornerMax >= yDimension || rDim.XRoomCornerMin < 0 || rDim.YRoomCornerMin < 0) {
 			rDim.RoomPossible = false;
 			return rDim;
 		}
-		if (rDim.XExit > xDimension || rDim.YExit > yDimension || rDim.XExit < 0 || rDim.YExit < 0) {
+		if (rDim.XExit >= xDimension || rDim.YExit >= yDimension || rDim.XExit < 0 || rDim.YExit < 0) {
 			rDim.RoomPossible = false;
 			print ("Exit corridor nicht moeglich!");
 			return rDim;
@@ -224,36 +223,20 @@ public class Main : MonoBehaviour
 
 	int[] simplePath ()
 	{
-		int xStart = nextWay [0],
-		yStart = nextWay [1], 
-		nextDirection = chooseWay (xStart, yStart);
-
-		//BREAK IF OUTOF RANGE
-		//if (checkIfPathFree (xStart, yStart) == false)
-		//	return nextWay;
-		
-		//RoomTile actRoom = roomTiles [xStart, yStart];
+		int xStart = nextWay [0], yStart = nextWay [1], nextDirection = chooseWay (xStart, yStart);
 
 		switch (nextDirection) {
 		case 0:
 			yStart++;
-			//roomTiles [xStart, yStart].Connections [0] = false;
-			//roomTiles [xStart, yStart++].Connections [2] = false;
 			break;
 		case 1:
 			xStart++;
-			//roomTiles [xStart, yStart].Connections [1] = false;
-			//roomTiles [xNext, yNext].Connections [3] = false;
 			break;
 		case 2:
 			yStart--;
-			//roomTiles [xStart, yStart].Connections [2] = false;
-			//roomTiles [xNext, yNext].Connections [0] = false;
 			break;
 		case 3:
 			xStart--;
-			//roomTiles [xStart, yStart].Connections [3] = false;
-			//roomTiles [xNext, yNext].Connections [1] = false;
 			break;
 		case 5:
 			//Nothing...
@@ -299,49 +282,47 @@ public class Main : MonoBehaviour
 		for (int x = 0; x < 4; x++) {
 			switch (x) {
 			case 0:
-				if (yCheck + 1 < yDimension) {
-					if (checkIfPathFree (xCheck, yCheck + 1)) {
-						if (roomTiles [xCheck, yCheck + 1].Emptyness > bestEmptyness) {
-							bestEmptyness = roomTiles [xCheck, yCheck + 1].Emptyness;
-							bestDirection = x;
-						}
-						possibleWays.Add (x);
+				if (checkIfPathFree (xCheck, yCheck + 1)) {
+					if (roomTiles [xCheck, yCheck + 1].Emptyness > bestEmptyness) {
+						bestEmptyness = roomTiles [xCheck, yCheck + 1].Emptyness;
+						bestDirection = x;
 					}
-					
+					possibleWays.Add (x);
 				}
+					
+
 				break;
 			case 1:
-				if (xCheck + 1 < xDimension) {
-					if (checkIfPathFree (xCheck + 1, yCheck)) {
-						if (roomTiles [xCheck + 1, yCheck].Emptyness > bestEmptyness) {
-							bestEmptyness = roomTiles [xCheck + 1, yCheck].Emptyness;
-							bestDirection = x;
-						}
-						possibleWays.Add (x);
+				
+				if (checkIfPathFree (xCheck + 1, yCheck)) {
+					if (roomTiles [xCheck + 1, yCheck].Emptyness > bestEmptyness) {
+						bestEmptyness = roomTiles [xCheck + 1, yCheck].Emptyness;
+						bestDirection = x;
 					}
+					possibleWays.Add (x);
 				}
+
 				break;
 			case 2:
-				if (yCheck - 1 >= 0) {
-					if (checkIfPathFree (xCheck, yCheck - 1)) {
-						if (roomTiles [xCheck, yCheck - 1].Emptyness > bestEmptyness) {
-							bestEmptyness = roomTiles [xCheck, yCheck - 1].Emptyness;
-							bestDirection = x;
-						}
-						possibleWays.Add (x);
+				
+				if (checkIfPathFree (xCheck, yCheck - 1)) {
+					if (roomTiles [xCheck, yCheck - 1].Emptyness > bestEmptyness) {
+						bestEmptyness = roomTiles [xCheck, yCheck - 1].Emptyness;
+						bestDirection = x;
 					}
+					possibleWays.Add (x);
 				}
+				
 				break;
 			case 3:
-				if (xCheck - 1 >= 0) {
-					if (checkIfPathFree (xCheck - 1, yCheck)) {
-						if (roomTiles [xCheck - 1, yCheck].Emptyness > bestEmptyness) {
-							bestEmptyness = roomTiles [xCheck - 1, yCheck].Emptyness;
-							bestDirection = x;
-						}
-						possibleWays.Add (x);
+				if (checkIfPathFree (xCheck - 1, yCheck)) {
+					if (roomTiles [xCheck - 1, yCheck].Emptyness > bestEmptyness) {
+						bestEmptyness = roomTiles [xCheck - 1, yCheck].Emptyness;
+						bestDirection = x;
 					}
+					possibleWays.Add (x);
 				}
+
 				break;
 			default:
 				break;
