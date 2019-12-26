@@ -44,23 +44,20 @@ public class Main : MonoBehaviour
 		initializeRooms ();
 		nextWay = new int[3];
 
-		xEntrance = UnityEngine.Random.Range (0, xDimension);
-		yEntrance = UnityEngine.Random.Range (0, yDimension);
+		nextWay [0] = UnityEngine.Random.Range (0, xDimension);
+		nextWay [1] = UnityEngine.Random.Range (0, yDimension);
 
-		setRoomType ("entrance", xEntrance, yEntrance);
-		setEntrance (xEntrance, yEntrance);
-
-		print ("x: " + xEntrance + " y: " + yEntrance + " emptyness: " + roomTiles [nextWay [0], nextWay [1]].Emptyness);
-
-		nextWay = simplePath (xEntrance, yEntrance);
-
-		nextWay = simpleRoom ();
-		calculateEmptyness ();
+		setRoomType ("entrance", nextWay [0], nextWay [1]);
+		//setEntrance (xEntrance, yEntrance);
 
 		print ("x: " + nextWay [0] + " y: " + nextWay [1] + " emptyness: " + roomTiles [nextWay [0], nextWay [1]].Emptyness);
-		nextWay = simplePath (nextWay [0], nextWay [1]);
-		setRoomType ("corridor", nextWay [0], nextWay [1]);
-		calculateEmptyness ();
+
+		nextWay = simplePath ();
+
+		nextWay = simpleRoom ();
+
+		nextWay = simplePath ();
+
 	}
 
 	//#####################################################################################################
@@ -119,16 +116,16 @@ public class Main : MonoBehaviour
 				Destroy (o);
 	}
 
-	void setEntrance (int xPos, int yPos)
-	{
-		RoomTile roomToChange = roomTiles [xPos, yPos];
-		roomToChange.Connections [0] = false;
-		roomToChange.Connections [1] = false;
-		roomToChange.Connections [2] = false;
-		roomToChange.Connections [3] = false;
-		roomToChange.Connections [UnityEngine.Random.Range (0, 3)] = true;
-	}
-
+	//	void setEntrance (int xPos, int yPos)
+	//	{
+	//		RoomTile roomToChange = roomTiles [xPos, yPos];
+	//		roomToChange.Connections [0] = false;
+	//		roomToChange.Connections [1] = false;
+	//		roomToChange.Connections [2] = false;
+	//		roomToChange.Connections [3] = false;
+	//		roomToChange.Connections [UnityEngine.Random.Range (0, 3)] = true;
+	//	}
+	//
 	void overwriteRoom (Room roomTypeFound, RoomTile roomToChange)
 	{
 		roomToChange.Type = roomTypeFound.Type;
@@ -161,6 +158,10 @@ public class Main : MonoBehaviour
 		roomExit [0] = rDim.XExit;
 		roomExit [1] = rDim.YExit;
 		roomExit [2] = nextWay [2];
+
+		calculateEmptyness ();
+
+		print ("x: " + nextWay [0] + " y: " + nextWay [1] + " emptyness: " + roomTiles [nextWay [0], nextWay [1]].Emptyness);
 
 		return roomExit;
 	}
@@ -229,7 +230,7 @@ public class Main : MonoBehaviour
 
 		RoomTile actRoom = roomTiles [xStart, yStart];
 
-		nextDirection = chooseWay (actRoom.Connections, xStart, yStart);
+		nextDirection = chooseWay (xStart, yStart);
 		switch (nextDirection) {
 		case 0:
 			yNext++;
