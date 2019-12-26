@@ -44,8 +44,8 @@ public class Main : MonoBehaviour
 
 		nextWay = new int[3];
 
-		nextWay [0] = UnityEngine.Random.Range (0, xDimension);
-		nextWay [1] = UnityEngine.Random.Range (0, yDimension);
+		nextWay [0] = 10 + UnityEngine.Random.Range (0, xDimension / 2);
+		nextWay [1] = 10 + UnityEngine.Random.Range (0, yDimension / 2);
 
 		setRoomType ("entrance", nextWay [0], nextWay [1]);
 		//setEntrance (xEntrance, yEntrance);
@@ -166,14 +166,14 @@ public class Main : MonoBehaviour
 			rDim.YRoomCornerMin = yStart + 1;
 			rDim.YRoomCornerMax = yStart + yRoomSize;
 			rDim.XExit = xStart;
-			rDim.YExit = rDim.YRoomCornerMax + 1;
+			rDim.YExit = rDim.YRoomCornerMax;
 			break;
 		case 1:
 			rDim.XRoomCornerMin = xStart + 1;
 			rDim.YRoomCornerMin = yStart - ((yRoomSize - 1) / 2);
 			rDim.XRoomCornerMax = xStart + xRoomSize;
 			rDim.YRoomCornerMax = yStart + ((yRoomSize - 1) / 2);
-			rDim.XExit = rDim.XRoomCornerMax + 1;
+			rDim.XExit = rDim.XRoomCornerMax;
 			rDim.YExit = yStart;
 			break;
 		case 2:
@@ -182,14 +182,14 @@ public class Main : MonoBehaviour
 			rDim.YRoomCornerMax = yStart - 1;
 			rDim.XRoomCornerMin = xStart - ((xRoomSize - 1) / 2);
 			rDim.XExit = xStart;
-			rDim.YExit = rDim.YRoomCornerMin - 1;
+			rDim.YExit = rDim.YRoomCornerMin;
 			break;
 		case 3:
 			rDim.XRoomCornerMin = xStart - xRoomSize;			
 			rDim.YRoomCornerMin = yStart - ((yRoomSize - 1) / 2);
 			rDim.XRoomCornerMax = xStart - 1;
 			rDim.YRoomCornerMax = yStart + ((yRoomSize - 1) / 2);
-			rDim.XExit = rDim.XRoomCornerMin - 1;
+			rDim.XExit = rDim.XRoomCornerMin;
 			rDim.YExit = yStart;
 			break;
 		default:
@@ -201,7 +201,7 @@ public class Main : MonoBehaviour
 		}
 		if (rDim.XExit > xDimension || rDim.YExit > yDimension || rDim.XExit < 0 || rDim.YExit < 0) {
 			rDim.RoomPossible = false;
-			print ("Exit nicht moeglich!");
+			print ("Exit corridor nicht moeglich!");
 			return rDim;
 		}
 		for (int x = rDim.XRoomCornerMin; x <= rDim.XRoomCornerMax; x++) {

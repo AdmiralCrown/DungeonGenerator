@@ -136,7 +136,7 @@ namespace DungeonGeneratorClasses
 		}
 
 		public int YRoomCornerMax {
-			get { return xRoomCornerMax; }
+			get { return yRoomCornerMax; }
 			set { yRoomCornerMax = value; }
 		}
 
