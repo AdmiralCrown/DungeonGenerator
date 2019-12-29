@@ -156,5 +156,12 @@ namespace DungeonGeneratorClasses
 		}
 
 	}
+
+	enum OpMode
+	{
+		ClickOnly,
+		AutomaticMode,
+		LoadMap,
+	};
 }
 

@@ -18,23 +18,38 @@ public class Main : MonoBehaviour
 		roomTypes.Add (new Room ("empty", new Color (255, 0, 0), 100.0, ' '));
 		roomTypes.Add (new Room ("entrance", new Color (255, 0, 255), 100.0, 'x'));
 		roomTypes.Add (new Room ("corridor", new Color (0, 200, 255), 100.0, 'o'));
+
 		roomTypes.Add (new Room ("room1", new Color (0, 255, 0), 100.0, '◙'));
 		roomTypes.Add (new Room ("room2", new Color (0, 200, 0), 100.0, '◙'));
 		roomTypes.Add (new Room ("room3", new Color (0, 150, 0), 100.0, '◙'));
 		roomTypes.Add (new Room ("room4", new Color (0, 100, 0), 100.0, '◙'));
 		roomTypes.Add (new Room ("room5", new Color (0, 50, 0), 100.0, '◙'));
+
 		roomTypes.Add (new Room ("boss", new Color (200, 100, 5), 'b'));
 	}
 	//#####################################################################################################
 	// Variables
 	//#####################################################################################################
 	const int xDimension = 40, yDimension = 40;
+
 	RoomTile[,] roomTiles;
+
 	RoomTile actTile;
+
 	List<Room> roomTypes = new List<Room> ();
+
 	List<roomDimension> createdRooms = new List<roomDimension> ();
+
 	int[] nextWay;
-	int corridorNr = 0, roomNr = 0;
+
+	int corridorNr = 0, roomNr = 0, mapNr = 0;
+
+	bool alwaysTrue = true;
+
+	OpMode operationMode = OpMode.AutomaticMode;
+
+	public string fileName;
+
 	//#####################################################################################################
 	// Initialization
 	//#####################################################################################################
@@ -43,19 +58,30 @@ public class Main : MonoBehaviour
 
 		transform.position = new Vector3 (xDimension / 8.0f, yDimension / 8.0f, -(xDimension + xDimension));
 		roomTiles = new RoomTile[xDimension, yDimension];
-
 		initializeRoomTypes ();
 		initializeRooms ();
 
-		nextWay = new int[3];
+		switch (operationMode) {
 
-		nextWay [0] = 10 + UnityEngine.Random.Range (0, xDimension / 2);
-		nextWay [1] = 10 + UnityEngine.Random.Range (0, yDimension / 2);
+		case OpMode.ClickOnly:
+		case OpMode.AutomaticMode:
+			
+			nextWay = new int[3];
+			nextWay [0] = 10 + UnityEngine.Random.Range (0, xDimension / 2);
+			nextWay [1] = 10 + UnityEngine.Random.Range (0, yDimension / 2);
+			setRoomType ("entrance", nextWay [0], nextWay [1]);
+			//print ("x: " + nextWay [0] + " y: " + nextWay [1] + " emptyness: " + roomTiles [nextWay [0], nextWay [1]].Emptyness);
 
-		setRoomType ("entrance", nextWay [0], nextWay [1]);
-		//setEntrance (xEntrance, yEntrance);
+			break;
 
-		//print ("x: " + nextWay [0] + " y: " + nextWay [1] + " emptyness: " + roomTiles [nextWay [0], nextWay [1]].Emptyness);
+		case OpMode.LoadMap:
+
+			//TODO
+			break;
+		default:
+			break;
+		}
+
 
 	}
 
@@ -64,33 +90,88 @@ public class Main : MonoBehaviour
 	//#####################################################################################################
 	void Update ()
 	{
-		
-		nextWay = simplePath ();
-		//nextWay = simplePath (nextWay [2]);
-		if (corridorNr > 5 + UnityEngine.Random.Range (3, 5)) {
-			nextWay = simpleRoom ();
-			corridorNr = 0;
+		switch (operationMode) {
+	
+		//################################################################################################
+		case OpMode.ClickOnly:
+
+			nextWay = simplePath (); //SIMPLE MAP GENERATION
+			if (corridorNr > 5 + UnityEngine.Random.Range (3, 5)) {
+				nextWay = simpleRoom ();
+				corridorNr = 0;
+			}
+			corridorNr++;
+
+			if (roomNr >= 5)
+				roomNr = 0;
+
+			if (Input.GetKeyDown (KeyCode.S))//MAPSCORE
+				print ("Map Score: " + getMapScore ());
+
+			if (Input.GetMouseButtonDown (1)) //SAVE
+				saveMap ("Map", ".txt");
+
+			if (Input.GetMouseButtonDown (0)) {//RESTART
+				restart ();
+			}
+				
+			//setRoom (createdRooms [createdRooms.Count - 1], "boss");
+			break;
+		//################################################################################################
+		case OpMode.AutomaticMode:
+
+			restart ();
+
+			while (alwaysTrue) {	
+
+				nextWay = simplePath (); //SIMPLE MAP GENERATION
+				if (corridorNr > 5 + UnityEngine.Random.Range (3, 5)) {
+					nextWay = simpleRoom ();
+					corridorNr = 0;
+				}
+				corridorNr++;
+
+				if (roomNr >= 5)
+					roomNr = 0;
+
+				if (alwaysTrue == false) {
+					int actMapScore = (int)getMapScore ();
+
+					mapNr++;
+
+					if (actMapScore > 63000) {
+						saveMap ("Map_" + mapNr.ToString (), ".txt");
+						print ("Gefunden! Map Score: " + actMapScore);
+					}
+					print ("Map NR: " + mapNr + " MapScore: " + actMapScore);
+				}
+			}
+
+			alwaysTrue = true;
+
+			break;
+
+		//################################################################################################
+		case OpMode.LoadMap:
+			if (Input.GetMouseButtonDown (0)) {//RESTART
+				restart ();
+			}
+			break;
+		default:
+			break;
 		}
 
-
-		corridorNr++;
-		if (Input.GetKeyDown (KeyCode.E))
-			print ("Map Score: " + getMapScore ());
-		if (Input.GetKeyDown (KeyCode.B))
-			setRoom (createdRooms [createdRooms.Count - 1], "boss");
-		if (Input.GetMouseButtonDown (1))
-			saveMap ("Map", ".txt");
-
-		if (Input.GetMouseButtonDown (0)) {
-			roomNr = 0;
-			corridorNr = 0;
-			destroyAll ();
-			Start ();
-		}
-		if (roomNr >= 5)
-			roomNr = 0;
 	}
 	//#####################################################################################################
+
+	void restart ()
+	{
+		roomNr = 0;
+		corridorNr = 0;
+		destroyAll ();
+		Start ();
+	}
+
 	double getMapScore ()
 	{
 		double totalScore = 0;
@@ -274,9 +355,10 @@ public class Main : MonoBehaviour
 			break;
 		}
 
-		if (checkIfPathFree (xStart, yStart) == false)
+		if (checkIfPathFree (xStart, yStart) == false) {
+			alwaysTrue = false;
 			return nextWay;
-		
+		}
 		int[] nextRoom = new int[3];
 		nextRoom [0] = xStart;
 		nextRoom [1] = yStart;
@@ -418,9 +500,24 @@ public class Main : MonoBehaviour
 		}
 	}
 
+	void loadMap (string fileName, string fileEnding)
+	{
+		string path = @"C:\Users\Oliver\Desktop\" + fileName + fileEnding;
+
+		string createText = Environment.NewLine;
+		for (int x = 0; x < xDimension; x++) {
+			for (int y = 0; y < yDimension; y++) {
+				createText += roomTiles [x, y].Symbol;
+			}
+			createText += Environment.NewLine;
+		}
+		File.WriteAllText (path, createText);
+		print ("Printed");
+	}
+
 	void saveMap (string fileName, string fileEnding)
 	{
-		string path = @"C:\Users\Oliver Laptop\Desktop\" + fileName + fileEnding;
+		string path = @"C:\Users\Oliver\Desktop\" + fileName + fileEnding;
 		//if (!File.Exists (path)) {
 		string createText = Environment.NewLine;
 		for (int x = 0; x < xDimension; x++) {
