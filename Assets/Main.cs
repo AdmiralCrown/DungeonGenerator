@@ -18,8 +18,12 @@ public class Main : MonoBehaviour
 		roomTypes.Add (new Room ("empty", new Color (255, 0, 0), 100.0, ' '));
 		roomTypes.Add (new Room ("entrance", new Color (255, 0, 255), 100.0, 'x'));
 		roomTypes.Add (new Room ("corridor", new Color (0, 200, 255), 100.0, 'o'));
-		roomTypes.Add (new Room ("room1", new Color (0, 0, 255), 100.0, '◙'));
-		roomTypes.Add (new Room ("boss", new Color (2, 100, 5), 'b'));
+		roomTypes.Add (new Room ("room1", new Color (0, 255, 0), 100.0, '◙'));
+		roomTypes.Add (new Room ("room2", new Color (0, 200, 0), 100.0, '◙'));
+		roomTypes.Add (new Room ("room3", new Color (0, 150, 0), 100.0, '◙'));
+		roomTypes.Add (new Room ("room4", new Color (0, 100, 0), 100.0, '◙'));
+		roomTypes.Add (new Room ("room5", new Color (0, 50, 0), 100.0, '◙'));
+		roomTypes.Add (new Room ("boss", new Color (200, 100, 5), 'b'));
 	}
 	//#####################################################################################################
 	// Variables
@@ -30,7 +34,7 @@ public class Main : MonoBehaviour
 	List<Room> roomTypes = new List<Room> ();
 	List<roomDimension> createdRooms = new List<roomDimension> ();
 	int[] nextWay;
-	int corridorNr = 0;
+	int corridorNr = 0, roomNr = 0;
 	//#####################################################################################################
 	// Initialization
 	//#####################################################################################################
@@ -51,7 +55,7 @@ public class Main : MonoBehaviour
 		setRoomType ("entrance", nextWay [0], nextWay [1]);
 		//setEntrance (xEntrance, yEntrance);
 
-		print ("x: " + nextWay [0] + " y: " + nextWay [1] + " emptyness: " + roomTiles [nextWay [0], nextWay [1]].Emptyness);
+		//print ("x: " + nextWay [0] + " y: " + nextWay [1] + " emptyness: " + roomTiles [nextWay [0], nextWay [1]].Emptyness);
 
 	}
 
@@ -62,6 +66,7 @@ public class Main : MonoBehaviour
 	{
 		
 		nextWay = simplePath ();
+		//nextWay = simplePath (nextWay [2]);
 		if (corridorNr > 5 + UnityEngine.Random.Range (3, 5)) {
 			nextWay = simpleRoom ();
 			corridorNr = 0;
@@ -69,17 +74,34 @@ public class Main : MonoBehaviour
 
 
 		corridorNr++;
-
+		if (Input.GetKeyDown (KeyCode.E))
+			print ("Map Score: " + getMapScore ());
+		if (Input.GetKeyDown (KeyCode.B))
+			setRoom (createdRooms [createdRooms.Count - 1], "boss");
 		if (Input.GetMouseButtonDown (1))
 			saveMap ("Map", ".txt");
 
 		if (Input.GetMouseButtonDown (0)) {
+			roomNr = 0;
+			corridorNr = 0;
 			destroyAll ();
 			Start ();
 		}
+		if (roomNr >= 5)
+			roomNr = 0;
+	}
+	//#####################################################################################################
+	double getMapScore ()
+	{
+		double totalScore = 0;
+		for (int x = 0; x < xDimension; x++) {
+			for (int y = 0; y < yDimension; y++) {
+				totalScore += 100.0 - roomTiles [x, y].Emptyness;
+			}
+		}
+		return totalScore;	
 	}
 
-	//#####################################################################################################
 	void initializeRooms ()
 	{
 		for (int x = 0; x < xDimension; x++) {
@@ -129,28 +151,34 @@ public class Main : MonoBehaviour
 		roomToChange.TileObject.GetComponent<MeshRenderer> ().material = newMaterial;
 	}
 
+	void setRoom (roomDimension rDim, string roomType)
+	{
+		for (int x = rDim.XRoomCornerMin; x <= rDim.XRoomCornerMax; x++) {
+			for (int y = rDim.YRoomCornerMin; y <= rDim.YRoomCornerMax; y++) {
+				setRoomType (roomType, x, y);
+			}
+		}
+	}
+
 	int[] simpleRoom ()
 	{
-		roomDimension rDim = spaceforRoom (UnityEngine.Random.Range (3, 9), UnityEngine.Random.Range (3, 9)); //ATM nur gerade
+		roomDimension rDim = spaceforRoom (UnityEngine.Random.Range (3, 7), UnityEngine.Random.Range (3, 7)); //ATM nur gerade
 
 		int[] roomExit = new int[3];
 
 		if (rDim.RoomPossible == true) {
-			for (int x = rDim.XRoomCornerMin; x <= rDim.XRoomCornerMax; x++) {
-				for (int y = rDim.YRoomCornerMin; y <= rDim.YRoomCornerMax; y++) {
-					setRoomType ("room1", x, y);
-				}
-			}
+			roomNr++;
+			setRoom (rDim, "room" + roomNr.ToString ());
 
-			//return next Coordinates for corridor
+			createdRooms.Add (rDim);
+
+			calculateEmptyness ();
+
 			roomExit [0] = rDim.XExit;
 			roomExit [1] = rDim.YExit;
 			roomExit [2] = nextWay [2];
 
-			calculateEmptyness ();
-
-			print ("x: " + nextWay [0] + " y: " + nextWay [1] + " emptyness: " + roomTiles [nextWay [0], nextWay [1]].Emptyness);
-			//print ("xmin: " + rDim.XRoomCornerMin + " ymin: " + rDim.YRoomCornerMin + " xmax: " + rDim.XRoomCornerMax + " ymax: " + rDim.YRoomCornerMax + " possible: " + rDim.RoomPossible);
+			//print ("x: " + roomExit [0] + " y: " + roomExit [1] + " emptyness: " + roomTiles [roomExit [0], roomExit [1]].Emptyness);
 
 			return roomExit;
 		} else {
@@ -213,7 +241,7 @@ public class Main : MonoBehaviour
 		}
 		for (int x = rDim.XRoomCornerMin; x <= rDim.XRoomCornerMax; x++) {
 			for (int y = rDim.YRoomCornerMin; y <= rDim.YRoomCornerMax; y++) {
-				if (roomTiles [x, y].Type != "empty")//&& x != xStart && y != yStart)
+				if (roomTiles [x, y].Type != "empty")
 					rDim.RoomPossible = false;
 			}
 		}
@@ -258,7 +286,7 @@ public class Main : MonoBehaviour
 
 		calculateEmptyness ();
 
-		print ("x: " + nextRoom [0] + " y: " + nextRoom [1] + " emptyness: " + roomTiles [nextRoom [0], nextRoom [1]].Emptyness);
+		//print ("x: " + nextRoom [0] + " y: " + nextRoom [1] + " emptyness: " + roomTiles [nextRoom [0], nextRoom [1]].Emptyness);
 
 		return nextRoom;
 	}
@@ -282,7 +310,7 @@ public class Main : MonoBehaviour
 		for (int x = 0; x < 4; x++) {
 			switch (x) {
 			case 0:
-				if (checkIfPathFree (xCheck, yCheck + 1)) {
+				if (checkIfGoodPath (xCheck, yCheck + 1, x)) {
 					if (roomTiles [xCheck, yCheck + 1].Emptyness > bestEmptyness) {
 						bestEmptyness = roomTiles [xCheck, yCheck + 1].Emptyness;
 						bestDirection = x;
@@ -294,7 +322,7 @@ public class Main : MonoBehaviour
 				break;
 			case 1:
 				
-				if (checkIfPathFree (xCheck + 1, yCheck)) {
+				if (checkIfGoodPath (xCheck + 1, yCheck, x)) {
 					if (roomTiles [xCheck + 1, yCheck].Emptyness > bestEmptyness) {
 						bestEmptyness = roomTiles [xCheck + 1, yCheck].Emptyness;
 						bestDirection = x;
@@ -305,7 +333,7 @@ public class Main : MonoBehaviour
 				break;
 			case 2:
 				
-				if (checkIfPathFree (xCheck, yCheck - 1)) {
+				if (checkIfGoodPath (xCheck, yCheck - 1, x)) {
 					if (roomTiles [xCheck, yCheck - 1].Emptyness > bestEmptyness) {
 						bestEmptyness = roomTiles [xCheck, yCheck - 1].Emptyness;
 						bestDirection = x;
@@ -315,7 +343,7 @@ public class Main : MonoBehaviour
 				
 				break;
 			case 3:
-				if (checkIfPathFree (xCheck - 1, yCheck)) {
+				if (checkIfGoodPath (xCheck - 1, yCheck, x)) {
 					if (roomTiles [xCheck - 1, yCheck].Emptyness > bestEmptyness) {
 						bestEmptyness = roomTiles [xCheck - 1, yCheck].Emptyness;
 						bestDirection = x;
@@ -330,10 +358,39 @@ public class Main : MonoBehaviour
 		}
 		if (possibleWays.Count < 1)
 			return 5;
-		if (UnityEngine.Random.Range (0, 2) == 0)
+		if (UnityEngine.Random.Range (0, 8) == 4)
 			return possibleWays [UnityEngine.Random.Range (0, possibleWays.Count)];
 		else
 			return (int)bestDirection;
+	}
+
+	bool checkIfGoodPath (int xCheck, int yCheck, int direction)
+	{
+		switch (direction) {
+		case 0:
+			if (checkIfPathFree (xCheck, yCheck + 1) && checkIfPathFree (xCheck + 1, yCheck) &&
+			    checkIfPathFree (xCheck - 1, yCheck) && checkIfPathFree (xCheck, yCheck))
+				return true;
+			break;
+		case 1:
+			if (checkIfPathFree (xCheck + 1, yCheck) && checkIfPathFree (xCheck, yCheck + 1) &&
+			    checkIfPathFree (xCheck, yCheck - 1) && checkIfPathFree (xCheck, yCheck))
+				return true;
+			break;
+		case 2:
+			if (checkIfPathFree (xCheck, yCheck - 1) && checkIfPathFree (xCheck + 1, yCheck) &&
+			    checkIfPathFree (xCheck - 1, yCheck) && checkIfPathFree (xCheck, yCheck))
+				return true;
+			break;
+		case 3:
+			if (checkIfPathFree (xCheck - 1, yCheck) && checkIfPathFree (xCheck, yCheck + 1) &&
+			    checkIfPathFree (xCheck, yCheck - 1) && checkIfPathFree (xCheck, yCheck))
+				return true;
+			break;
+		default:
+			return false;
+		}
+		return false;
 	}
 
 	void calculateEmptyness ()
