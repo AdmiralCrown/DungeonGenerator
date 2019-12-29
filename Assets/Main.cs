@@ -15,7 +15,7 @@ public class Main : MonoBehaviour
 	void initializeRoomTypes ()
 	{
 		bool[] emptyRoom = new bool[]{ true, true, true, true };
-		roomTypes.Add (new Room ("empty", new Color (255, 0, 0), 100.0, ' '));
+		roomTypes.Add (new Room ("empty", new Color (0, 0, 0), 100.0, ' '));
 		roomTypes.Add (new Room ("entrance", new Color (255, 0, 255), 100.0, 'x'));
 		roomTypes.Add (new Room ("corridor", new Color (0, 200, 255), 100.0, 'o'));
 
@@ -28,8 +28,12 @@ public class Main : MonoBehaviour
 		roomTypes.Add (new Room ("boss", new Color (200, 100, 5), 'b'));
 	}
 	//#####################################################################################################
+
 	// Variables
 	//#####################################################################################################
+
+	#region Variables
+
 	const int xDimension = 40, yDimension = 40;
 
 	RoomTile[,] roomTiles;
@@ -46,11 +50,14 @@ public class Main : MonoBehaviour
 
 	bool alwaysTrue = true;
 
-	OpMode operationMode = OpMode.AutomaticMode;
+	OpMode operationMode = OpMode.LoadMap;
 
-	public string fileName;
+	public string openMapFileNr;
+
+	#endregion
 
 	//#####################################################################################################
+
 	// Initialization
 	//#####################################################################################################
 	void Start ()
@@ -84,8 +91,8 @@ public class Main : MonoBehaviour
 
 
 	}
-
 	//#####################################################################################################
+
 	// Update is called once per frame
 	//#####################################################################################################
 	void Update ()
@@ -105,7 +112,7 @@ public class Main : MonoBehaviour
 			if (roomNr >= 5)
 				roomNr = 0;
 
-			if (Input.GetKeyDown (KeyCode.S))//MAPSCORE
+			if (Input.GetKeyDown (KeyCode.S)) //MAPSCORE
 				print ("Map Score: " + getMapScore ());
 
 			if (Input.GetMouseButtonDown (1)) //SAVE
@@ -139,7 +146,7 @@ public class Main : MonoBehaviour
 
 					mapNr++;
 
-					if (actMapScore > 63000) {
+					if (actMapScore > 55000) {
 						saveMap ("Map_" + mapNr.ToString (), ".txt");
 						print ("Gefunden! Map Score: " + actMapScore);
 					}
@@ -153,8 +160,9 @@ public class Main : MonoBehaviour
 
 		//################################################################################################
 		case OpMode.LoadMap:
-			if (Input.GetMouseButtonDown (0)) {//RESTART
+			if (Input.GetMouseButtonDown (0)) {
 				restart ();
+				loadMap ("Map_" + openMapFileNr, ".txt");
 			}
 			break;
 		default:
@@ -195,7 +203,7 @@ public class Main : MonoBehaviour
 			}
 		}
 	}
-	//#####################################################################################################
+
 	void setRoomType (string roomType, int xPos, int yPos)
 	{
 		
@@ -208,7 +216,7 @@ public class Main : MonoBehaviour
 		setRoomColor (roomToChange);
 
 	}
-	//#####################################################################################################
+
 	void destroyAll ()
 	{
 		
@@ -504,15 +512,18 @@ public class Main : MonoBehaviour
 	{
 		string path = @"C:\Users\Oliver\Desktop\" + fileName + fileEnding;
 
-		string createText = Environment.NewLine;
-		for (int x = 0; x < xDimension; x++) {
-			for (int y = 0; y < yDimension; y++) {
-				createText += roomTiles [x, y].Symbol;
+		string readText = File.ReadAllText (path);
+
+		int s = 0;
+		for (int y = yDimension - 1; y >= 0; y--) {
+			for (int x = 0; x < xDimension; x++) {
+				
+				Room roomTypeFound = roomTypes.Find (z => z.Symbol == readText [s]);
+				setRoomType (roomTypeFound.Type, x, y);
+				s++;
 			}
-			createText += Environment.NewLine;
+			s += 2;
 		}
-		File.WriteAllText (path, createText);
-		print ("Printed");
 	}
 
 	void saveMap (string fileName, string fileEnding)

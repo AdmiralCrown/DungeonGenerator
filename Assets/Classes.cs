@@ -19,8 +19,6 @@ namespace DungeonGeneratorClasses
 		private double emptyness;
 		private char symbol;
 
-		#region constructor_getter_setter
-
 		public Room (string type, Color color, double emptyness, char symbol)
 		{
 			this.type = type;
@@ -64,8 +62,7 @@ namespace DungeonGeneratorClasses
 			get { return symbol; }
 			set { symbol = value; }
 		}
-
-		#endregion
+			
 	}
 
 	public class RoomTile : Room
