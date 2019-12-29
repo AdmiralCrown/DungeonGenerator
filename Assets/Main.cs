@@ -50,7 +50,8 @@ public class Main : MonoBehaviour
 
 	bool alwaysTrue = true;
 
-	OpMode operationMode = OpMode.LoadMap;
+	OpMode operationMode = OpMode.AutomaticMode;
+	//OPERATION MODE
 
 	public string openMapFileNr;
 
@@ -146,7 +147,7 @@ public class Main : MonoBehaviour
 
 					mapNr++;
 
-					if (actMapScore > 55000) {
+					if (actMapScore > 63000) {
 						saveMap ("Map_" + mapNr.ToString (), ".txt");
 						print ("Gefunden! Map Score: " + actMapScore);
 					}
@@ -164,6 +165,9 @@ public class Main : MonoBehaviour
 				restart ();
 				loadMap ("Map_" + openMapFileNr, ".txt");
 			}
+			if (Input.GetMouseButtonDown (1))
+				print ("MapScore: " + (int)getMapScore ());
+			
 			break;
 		default:
 			break;
