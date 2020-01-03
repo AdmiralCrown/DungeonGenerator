@@ -18,8 +18,12 @@ namespace DungeonGeneratorClasses
 		private Color color;
 		private double emptyness;
 		private char symbol;
+        private ConnectionType UpCon;
+        private ConnectionType RightCon;
+        private ConnectionType DownCon;
+        private ConnectionType LeftCon;
 
-		public Room (string type, Color color, double emptyness, char symbol)
+        public Room (string type, Color color, double emptyness, char symbol)
 		{
 			this.type = type;
 			this.color = color;
@@ -160,5 +164,57 @@ namespace DungeonGeneratorClasses
 		AutomaticMode,
 		LoadMap,
 	};
+
+    enum ConnectionType
+    {
+        None,
+        Corridor,
+        Room,
+    };
+
+    enum Dir
+    {
+        Up,
+        Right,
+        Down,
+        Left,
+        Count,
+    };
+    class nextDir
+    {
+        private int xNext;
+        private int yNext;
+        private Dir nextDirection;
+
+        public nextDir()
+        {
+            this.xNext = 0;
+            this.yNext = 0;
+            this.nextDirection = Dir.Count;
+        }
+
+        public nextDir(int xNext, int yNext, Dir nextDirection)
+        {
+            this.xNext = xNext;
+            this.yNext = yNext;
+            this.nextDirection = nextDirection;
+        }
+ 
+        public int XNext
+        {
+            get { return xNext; }
+            set { xNext = value; }
+        }
+        public int YNext
+        {
+            get { return yNext; }
+            set { yNext = value; }
+        }
+        public Dir NextDirection
+        {
+            get { return nextDirection; }
+            set { nextDirection = value; }
+        }
+    }
 }
 

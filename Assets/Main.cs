@@ -44,13 +44,13 @@ public class Main : MonoBehaviour
 
 	List<roomDimension> createdRooms = new List<roomDimension> ();
 
-	int[] nextWay;
+    nextDir nextDirection;
 
 	int corridorNr = 0, roomNr = 0, mapNr = 0;
 
 	bool alwaysTrue = true;
 
-	OpMode operationMode = OpMode.AutomaticMode;
+	OpMode operationMode = OpMode.ClickOnly;
 	//OPERATION MODE
 
 	public string openMapFileNr;
@@ -73,11 +73,9 @@ public class Main : MonoBehaviour
 
 		case OpMode.ClickOnly:
 		case OpMode.AutomaticMode:
-			
-			nextWay = new int[3];
-			nextWay [0] = 10 + UnityEngine.Random.Range (0, xDimension / 2);
-			nextWay [1] = 10 + UnityEngine.Random.Range (0, yDimension / 2);
-			setRoomType ("entrance", nextWay [0], nextWay [1]);
+
+            nextDirection = new nextDir(10 + UnityEngine.Random.Range(0, xDimension / 2), 10 + UnityEngine.Random.Range(0, yDimension / 2),Dir.Count);
+			setRoomType ("entrance", nextDirection.XNext, nextDirection.YNext);
 			//print ("x: " + nextWay [0] + " y: " + nextWay [1] + " emptyness: " + roomTiles [nextWay [0], nextWay [1]].Emptyness);
 
 			break;
@@ -103,9 +101,9 @@ public class Main : MonoBehaviour
 		//################################################################################################
 		case OpMode.ClickOnly:
 
-			nextWay = simplePath (); //SIMPLE MAP GENERATION
+			nextDirection = simplePath (); //SIMPLE MAP GENERATION
 			if (corridorNr > 5 + UnityEngine.Random.Range (3, 5)) {
-				nextWay = simpleRoom ();
+                nextDirection = simpleRoom ();
 				corridorNr = 0;
 			}
 			corridorNr++;
@@ -130,11 +128,11 @@ public class Main : MonoBehaviour
 
 			restart ();
 
-			while (alwaysTrue) {	
+			while (alwaysTrue) {
 
-				nextWay = simplePath (); //SIMPLE MAP GENERATION
+                    nextDirection = simplePath (); //SIMPLE MAP GENERATION
 				if (corridorNr > 5 + UnityEngine.Random.Range (3, 5)) {
-					nextWay = simpleRoom ();
+                        nextDirection = simpleRoom ();
 					corridorNr = 0;
 				}
 				corridorNr++;
@@ -184,7 +182,15 @@ public class Main : MonoBehaviour
 		Start ();
 	}
 
-	double getMapScore ()
+    void destroyAll()
+    {
+
+        foreach (GameObject o in GameObject.FindObjectsOfType<GameObject>())
+            if (o.tag != "MainCamera")
+                Destroy(o);
+    }
+
+    double getMapScore ()
 	{
 		double totalScore = 0;
 		for (int x = 0; x < xDimension; x++) {
@@ -221,22 +227,15 @@ public class Main : MonoBehaviour
 
 	}
 
-	void destroyAll ()
-	{
-		
-		foreach (GameObject o in GameObject.FindObjectsOfType<GameObject>())
-			if (o.tag != "MainCamera")
-				Destroy (o);
-	}
+    void overwriteRoom(Room roomTypeFound, RoomTile roomToChange)
+    {
+        roomToChange.Type = roomTypeFound.Type;
+        roomToChange.Color = roomTypeFound.Color;
+        roomToChange.Symbol = roomTypeFound.Symbol;
+    }
+       
 
-	void overwriteRoom (Room roomTypeFound, RoomTile roomToChange)
-	{
-		roomToChange.Type = roomTypeFound.Type;
-		roomToChange.Color = roomTypeFound.Color;
-		roomToChange.Symbol = roomTypeFound.Symbol;
-	}
-
-	void setRoomColor (RoomTile roomToChange)
+    void setRoomColor (RoomTile roomToChange)
 	{
 		Material newMaterial = new Material (Shader.Find ("Standard"));
 		newMaterial.color = roomToChange.Color;
@@ -253,11 +252,11 @@ public class Main : MonoBehaviour
 		}
 	}
 
-	int[] simpleRoom ()
+	nextDir simpleRoom ()
 	{
 		roomDimension rDim = spaceforRoom (UnityEngine.Random.Range (3, 7), UnityEngine.Random.Range (3, 7)); //ATM nur gerade
 
-		int[] roomExit = new int[3];
+		nextDir roomExit = new nextDir();
 
 		if (rDim.RoomPossible == true) {
 			roomNr++;
@@ -267,15 +266,15 @@ public class Main : MonoBehaviour
 
 			calculateEmptyness ();
 
-			roomExit [0] = rDim.XExit;
-			roomExit [1] = rDim.YExit;
-			roomExit [2] = nextWay [2];
+			roomExit.XNext = rDim.XExit;
+			roomExit.YNext = rDim.YExit;
+			roomExit.NextDirection = roomExit.NextDirection;
 
 			//print ("x: " + roomExit [0] + " y: " + roomExit [1] + " emptyness: " + roomTiles [roomExit [0], roomExit [1]].Emptyness);
 
 			return roomExit;
 		} else {
-			roomExit = nextWay;
+			roomExit = nextDirection;
 			return roomExit;			
 		}
 
@@ -283,12 +282,12 @@ public class Main : MonoBehaviour
 
 	roomDimension spaceforRoom (int xRoomSize, int yRoomSize)
 	{
-		roomDimension rDim = new roomDimension ();
+        roomDimension rDim = new roomDimension();
 
-		int xStart = nextWay [0], yStart = nextWay [1], direction = nextWay [2];
+		int xStart = nextDirection.XNext, yStart = nextDirection.YNext;
 
-		switch (direction) {
-		case 0:
+		switch (nextDirection.NextDirection) {
+		case Dir.Up:
 			rDim.XRoomCornerMin = xStart - ((xRoomSize - 1) / 2);
 			rDim.XRoomCornerMax = xStart + ((xRoomSize - 1) / 2);
 			rDim.YRoomCornerMin = yStart + 1;
@@ -296,7 +295,7 @@ public class Main : MonoBehaviour
 			rDim.XExit = xStart;
 			rDim.YExit = rDim.YRoomCornerMax;
 			break;
-		case 1:
+		case Dir.Right:
 			rDim.XRoomCornerMin = xStart + 1;
 			rDim.YRoomCornerMin = yStart - ((yRoomSize - 1) / 2);
 			rDim.XRoomCornerMax = xStart + xRoomSize;
@@ -304,7 +303,7 @@ public class Main : MonoBehaviour
 			rDim.XExit = rDim.XRoomCornerMax;
 			rDim.YExit = yStart;
 			break;
-		case 2:
+		case Dir.Down:
 			rDim.YRoomCornerMin = yStart - yRoomSize;
 			rDim.XRoomCornerMax = xStart + ((xRoomSize - 1) / 2);
 			rDim.YRoomCornerMax = yStart - 1;
@@ -312,7 +311,7 @@ public class Main : MonoBehaviour
 			rDim.XExit = xStart;
 			rDim.YExit = rDim.YRoomCornerMin;
 			break;
-		case 3:
+		case Dir.Left:
 			rDim.XRoomCornerMin = xStart - xRoomSize;			
 			rDim.YRoomCornerMin = yStart - ((yRoomSize - 1) / 2);
 			rDim.XRoomCornerMax = xStart - 1;
@@ -321,7 +320,13 @@ public class Main : MonoBehaviour
 			rDim.YExit = yStart;
 			break;
 		default:
-			break;
+            rDim.XRoomCornerMin = 0;
+            rDim.YRoomCornerMin = 0;
+            rDim.XRoomCornerMax = -1;
+            rDim.YRoomCornerMax = -1;
+            rDim.XExit = nextDirection.XNext;
+            rDim.YExit = nextDirection.YNext;
+            break;
 		}
 		if (rDim.XRoomCornerMax >= xDimension || rDim.YRoomCornerMax >= yDimension || rDim.XRoomCornerMin < 0 || rDim.YRoomCornerMin < 0) {
 			rDim.RoomPossible = false;
@@ -342,24 +347,26 @@ public class Main : MonoBehaviour
 		return rDim;
 	}
 
-	int[] simplePath ()
+	nextDir simplePath ()
 	{
-		int xStart = nextWay [0], yStart = nextWay [1], nextDirection = chooseWay (xStart, yStart);
+        int xStart = nextDirection.XNext, yStart = nextDirection.YNext;
 
-		switch (nextDirection) {
-		case 0:
+        Dir direction = chooseWay (xStart, yStart);
+
+		switch (direction) {
+		case Dir.Up:
 			yStart++;
 			break;
-		case 1:
+		case Dir.Right:
 			xStart++;
 			break;
-		case 2:
+		case Dir.Down:
 			yStart--;
 			break;
-		case 3:
+		case Dir.Left:
 			xStart--;
 			break;
-		case 5:
+		case Dir.Count:
 			//Nothing...
 			break;
 		default:
@@ -369,20 +376,18 @@ public class Main : MonoBehaviour
 
 		if (checkIfPathFree (xStart, yStart) == false) {
 			alwaysTrue = false;
-			return nextWay;
+            return nextDirection;
 		}
-		int[] nextRoom = new int[3];
-		nextRoom [0] = xStart;
-		nextRoom [1] = yStart;
-		nextRoom [2] = nextDirection;
 
-		setRoomType ("corridor", nextRoom [0], nextRoom [1]);
+        nextDir nextPath = new nextDir(xStart, yStart, direction);
+
+		setRoomType ("corridor", nextPath.XNext, nextPath.YNext);
 
 		calculateEmptyness ();
 
 		//print ("x: " + nextRoom [0] + " y: " + nextRoom [1] + " emptyness: " + roomTiles [nextRoom [0], nextRoom [1]].Emptyness);
 
-		return nextRoom;
+		return nextPath;
 	}
 
 	bool checkIfPathFree (int xCheck, int yCheck)
@@ -396,87 +401,90 @@ public class Main : MonoBehaviour
 		}
 	}
 
-	int chooseWay (int xCheck, int yCheck)
+	Dir chooseWay (int xCheck, int yCheck)
 	{
-		List<int> possibleWays = new List<int> ();
+		List<Dir> possibleWays = new List<Dir> ();
 		double bestEmptyness = 0;
-		int bestDirection = 1000;
-		for (int x = 0; x < 4; x++) {
-			switch (x) {
-			case 0:
-				if (checkIfGoodPath (xCheck, yCheck + 1, x)) {
-					if (roomTiles [xCheck, yCheck + 1].Emptyness > bestEmptyness) {
-						bestEmptyness = roomTiles [xCheck, yCheck + 1].Emptyness;
-						bestDirection = x;
-					}
-					possibleWays.Add (x);
-				}
-					
+		Dir bestDirection = Dir.Count;
 
-				break;
-			case 1:
+		for (Dir actDir = Dir.Up; actDir < Dir.Count; actDir++) {
+
+			switch (actDir) {
+
+                case Dir.Up:
+				    if (checkIfGoodPath (xCheck, yCheck + 1, actDir)) {
+					    if (roomTiles [xCheck, yCheck + 1].Emptyness > bestEmptyness) {
+						    bestEmptyness = roomTiles [xCheck, yCheck + 1].Emptyness;
+						    bestDirection = actDir;
+					    }
+					    possibleWays.Add (actDir);
+				    }
+				    break;
+
+                case Dir.Right:
 				
-				if (checkIfGoodPath (xCheck + 1, yCheck, x)) {
+				if (checkIfGoodPath (xCheck + 1, yCheck, actDir)) {
 					if (roomTiles [xCheck + 1, yCheck].Emptyness > bestEmptyness) {
 						bestEmptyness = roomTiles [xCheck + 1, yCheck].Emptyness;
-						bestDirection = x;
-					}
-					possibleWays.Add (x);
-				}
-
+                            bestDirection = actDir;
+                        }
+                        possibleWays.Add(actDir);
+                    }
 				break;
-			case 2:
+
+			case Dir.Down:
 				
-				if (checkIfGoodPath (xCheck, yCheck - 1, x)) {
+				if (checkIfGoodPath (xCheck, yCheck - 1, actDir)) {
 					if (roomTiles [xCheck, yCheck - 1].Emptyness > bestEmptyness) {
 						bestEmptyness = roomTiles [xCheck, yCheck - 1].Emptyness;
-						bestDirection = x;
-					}
-					possibleWays.Add (x);
-				}
-				
+                            bestDirection = actDir;
+                        }
+                        possibleWays.Add(actDir);
+                    }
 				break;
-			case 3:
-				if (checkIfGoodPath (xCheck - 1, yCheck, x)) {
+
+			case Dir.Left:
+
+				if (checkIfGoodPath (xCheck - 1, yCheck, actDir)) {
 					if (roomTiles [xCheck - 1, yCheck].Emptyness > bestEmptyness) {
 						bestEmptyness = roomTiles [xCheck - 1, yCheck].Emptyness;
-						bestDirection = x;
-					}
-					possibleWays.Add (x);
-				}
-
+                            bestDirection = actDir;
+                        }
+                        possibleWays.Add(actDir);
+                    }
 				break;
+
 			default:
 				break;
 			}
 		}
 		if (possibleWays.Count < 1)
-			return 5;
+			return Dir.Count;
 		if (UnityEngine.Random.Range (0, 8) == 4)
 			return possibleWays [UnityEngine.Random.Range (0, possibleWays.Count)];
 		else
-			return (int)bestDirection;
+			return bestDirection;
 	}
 
-	bool checkIfGoodPath (int xCheck, int yCheck, int direction)
+	bool checkIfGoodPath (int xCheck, int yCheck, Dir direction)
 	{
 		switch (direction) {
-		case 0:
+		case Dir.Up:
 			if (checkIfPathFree (xCheck, yCheck + 1) && checkIfPathFree (xCheck + 1, yCheck) &&
 			    checkIfPathFree (xCheck - 1, yCheck) && checkIfPathFree (xCheck, yCheck))
 				return true;
 			break;
-		case 1:
+		case Dir.Right:
 			if (checkIfPathFree (xCheck + 1, yCheck) && checkIfPathFree (xCheck, yCheck + 1) &&
 			    checkIfPathFree (xCheck, yCheck - 1) && checkIfPathFree (xCheck, yCheck))
 				return true;
 			break;
-		case 2:
+		case Dir.Down:
 			if (checkIfPathFree (xCheck, yCheck - 1) && checkIfPathFree (xCheck + 1, yCheck) &&
 			    checkIfPathFree (xCheck - 1, yCheck) && checkIfPathFree (xCheck, yCheck))
 				return true;
 			break;
-		case 3:
+		case Dir.Left:
 			if (checkIfPathFree (xCheck - 1, yCheck) && checkIfPathFree (xCheck, yCheck + 1) &&
 			    checkIfPathFree (xCheck, yCheck - 1) && checkIfPathFree (xCheck, yCheck))
 				return true;
