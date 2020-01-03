@@ -18,10 +18,11 @@ namespace DungeonGeneratorClasses
 		private Color color;
 		private double emptyness;
 		private char symbol;
-        private ConnectionType UpCon;
-        private ConnectionType RightCon;
-        private ConnectionType DownCon;
-        private ConnectionType LeftCon;
+        private ConnectionType upCon;
+        private ConnectionType rightCon;
+        private ConnectionType downCon;
+        private ConnectionType leftCon;
+        private RTP[,] roomTileParts;
 
         public Room (string type, Color color, double emptyness, char symbol)
 		{
@@ -29,7 +30,12 @@ namespace DungeonGeneratorClasses
 			this.color = color;
 			this.emptyness = emptyness;
 			this.symbol = symbol;
-		}
+            this.upCon = ConnectionType.None;
+            this.downCon = ConnectionType.None;
+            this.leftCon = ConnectionType.None;
+            this.rightCon = ConnectionType.None;
+            this.roomTileParts = new RTP[3, 3] { { RTP.Wall, RTP.Wall, RTP.Wall }, { RTP.Wall, RTP.Wall, RTP.Wall }, { RTP.Wall, RTP.Wall, RTP.Wall } };
+        }
 
 		public Room (string type, Color color, double emptyness)
 		{
@@ -37,7 +43,12 @@ namespace DungeonGeneratorClasses
 			this.color = color;
 			this.emptyness = emptyness;
 			this.symbol = ' ';
-		}
+            this.upCon = ConnectionType.None;
+            this.downCon = ConnectionType.None;
+            this.leftCon = ConnectionType.None;
+            this.rightCon = ConnectionType.None;
+            this.roomTileParts = new RTP[3, 3] { { RTP.Wall, RTP.Wall, RTP.Wall }, { RTP.Wall, RTP.Wall, RTP.Wall }, { RTP.Wall, RTP.Wall, RTP.Wall } };
+        }
 
 		public Room ()
 		{
@@ -45,7 +56,12 @@ namespace DungeonGeneratorClasses
 			this.color = new Color (0, 0, 0);
 			this.emptyness = 100.0;
 			this.symbol = ' ';
-		}
+            this.upCon = ConnectionType.None;
+            this.downCon = ConnectionType.None;
+            this.leftCon = ConnectionType.None;
+            this.rightCon = ConnectionType.None;
+            this.roomTileParts = new RTP[3, 3] { { RTP.Wall, RTP.Wall, RTP.Wall }, { RTP.Wall, RTP.Wall, RTP.Wall }, { RTP.Wall, RTP.Wall, RTP.Wall } };
+        }
 
 		public string Type {
 			get { return type; }
@@ -66,8 +82,72 @@ namespace DungeonGeneratorClasses
 			get { return symbol; }
 			set { symbol = value; }
 		}
-			
-	}
+
+        internal ConnectionType UpCon
+        {
+            get
+            {
+                return upCon;
+            }
+
+            set
+            {
+                upCon = value;
+            }
+        }
+
+        internal ConnectionType RightCon
+        {
+            get
+            {
+                return rightCon;
+            }
+
+            set
+            {
+                rightCon = value;
+            }
+        }
+
+        internal ConnectionType DownCon
+        {
+            get
+            {
+                return downCon;
+            }
+
+            set
+            {
+                downCon = value;
+            }
+        }
+
+        internal ConnectionType LeftCon
+        {
+            get
+            {
+                return leftCon;
+            }
+
+            set
+            {
+                leftCon = value;
+            }
+        }
+
+        internal RTP[,] RoomTileParts
+        {
+            get
+            {
+                return roomTileParts;
+            }
+
+            set
+            {
+                roomTileParts = value;
+            }
+        }
+    }
 
 	public class RoomTile : Room
 	{
@@ -84,13 +164,6 @@ namespace DungeonGeneratorClasses
 		}
 
 	}
-
-	public class Data
-	{
-
-
-	}
-
 	public class roomDimension
 	{
 		private int xRoomCornerMin;
@@ -180,6 +253,13 @@ namespace DungeonGeneratorClasses
         Left,
         Count,
     };
+
+    enum RTP
+    {
+        Wall,
+        Corridor,
+        Room,
+    }
     class nextDir
     {
         private int xNext;
