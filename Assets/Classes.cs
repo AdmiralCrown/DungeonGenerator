@@ -173,8 +173,13 @@ namespace DungeonGeneratorClasses
 		private bool roomPossible;
 		private int xExit;
 		private int yExit;
+        private Dir directionExit;
+        private int xEntrance;
+        private int yEntrance;
+        private Dir directionEntrance;
 
-		public roomDimension (int xMin, int xMax, int yMin, int yMax, bool roomPossible)
+
+        public roomDimension (int xMin, int xMax, int yMin, int yMax, bool roomPossible)
 		{
 			this.xRoomCornerMin = xMin;
 			this.xRoomCornerMax = xMax;
@@ -192,7 +197,11 @@ namespace DungeonGeneratorClasses
 			this.roomPossible = true;
 			this.xExit = 0;
 			this.yExit = 0;
-		}
+            this.xEntrance = 0;
+            this.yEntrance = 0;
+            directionExit = Dir.Count;
+            directionEntrance = Dir.Count;
+        }
 
 		public int XRoomCornerMin {
 			get { return xRoomCornerMin; }
@@ -229,7 +238,94 @@ namespace DungeonGeneratorClasses
 			set { yExit = value; }
 		}
 
-	}
+        public int XEntrance
+        {
+            get
+            {
+                return xEntrance;
+            }
+
+            set
+            {
+                xEntrance = value;
+            }
+        }
+
+        public int YEntrance
+        {
+            get
+            {
+                return yEntrance;
+            }
+
+            set
+            {
+                yEntrance = value;
+            }
+        }
+
+        internal Dir DirectionEntrance
+        {
+            get
+            {
+                return directionEntrance;
+            }
+
+            set
+            {
+                directionEntrance = value;
+            }
+        }
+
+        internal Dir DirectionExit
+        {
+            get
+            {
+                return directionExit;
+            }
+
+            set
+            {
+                directionExit = value;
+            }
+        }
+    }
+
+    public class newRTP
+    {
+        private RTP[,] parts;
+
+        public newRTP()
+        {
+            parts = new RTP[3,3];
+        }
+        public newRTP(int[] row1, int[] row2, int[] row3)
+        {
+            parts = new RTP[3,3];
+            parts[0, 0] = (RTP)row1[0];
+            parts[0, 1] = (RTP)row1[1];
+            parts[0, 2] = (RTP)row1[2];
+            parts[1, 0] = (RTP)row2[0];
+            parts[1, 1] = (RTP)row2[1];
+            parts[1, 2] = (RTP)row2[2];
+            parts[2, 0] = (RTP)row3[0];
+            parts[2, 1] = (RTP)row3[1];
+            parts[2, 2] = (RTP)row3[2];
+        }
+
+        internal RTP[,] Parts
+        {
+            get
+            {
+                return parts;
+            }
+
+            set
+            {
+                parts = value;
+            }
+        }
+    }
 
 	enum OpMode
 	{
@@ -257,8 +353,51 @@ namespace DungeonGeneratorClasses
     enum RTP
     {
         Wall,
-        Corridor,
         Room,
+        Corridor,        
+    }
+    class Position
+    {
+        private int x;
+        private int y;
+
+        public Position()
+        {
+            x = -1;
+            y = -1;
+        }
+
+        public Position(int x, int y)
+        {
+            this.x = x;
+            this.y = y;
+        }
+
+        public int X
+        {
+            get
+            {
+                return x;
+            }
+
+            set
+            {
+                x = value;
+            }
+        }
+
+        public int Y
+        {
+            get
+            {
+                return y;
+            }
+
+            set
+            {
+                y = value;
+            }
+        }
     }
     class nextDir
     {

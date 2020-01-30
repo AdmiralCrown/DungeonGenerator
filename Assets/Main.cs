@@ -22,7 +22,7 @@ public class Main : MonoBehaviour
         roomTypes.Add(new Room("room", new Color(0, 255, 0), 100.0, '◙'));
         roomTypes.Add(new Room("boss", new Color(200, 100, 5), 'b'));
 
-        
+
     }
     //#####################################################################################################
 
@@ -44,7 +44,7 @@ public class Main : MonoBehaviour
 
     nextDir nextDirection;
 
-    int corridorNr = 0, roomNr = 0, mapNr = 0;
+    int corridorNr = 0, roomNr = 0, mapNr = 0, bestMapScore = 0;
 
     bool alwaysTrue = true;
 
@@ -53,10 +53,15 @@ public class Main : MonoBehaviour
 
     public string openMapFileNr;
 
+    newRTP room_full = new newRTP(new int[] { 1, 1, 1 }, new int[] { 1, 1, 1 }, new int[] { 1, 1, 1 }),
+           room_border = new newRTP(new int[] { 0, 0, 0 }, new int[] { 1, 1, 1 }, new int[] { 1, 1, 1 }),
+           room_corner = new newRTP(new int[] { 0, 0, 0 }, new int[] { 0, 1, 1 }, new int[] { 0, 1, 1 }),
+           room_entrance = new newRTP(new int[] { 0, 1, 0 }, new int[] { 1, 1, 1 }, new int[] { 1, 1, 1 }),
+           empty_tile = new newRTP(new int[] { 0, 0, 0 }, new int[] { 0, 0, 0 }, new int[] {0, 0, 0 }),
+           room_corner_broken = new newRTP(new int[] { 0, 0, 0 }, new int[] { 0, 0, 0 }, new int[] { 0, 0, 1 }),
+           corridor_straight = new newRTP(new int[] { 0, 2, 0 }, new int[] { 0, 2, 0 }, new int[] { 0, 2, 0 }),
+           corridor_curve = new newRTP(new int[] { 0, 0, 0 }, new int[] { 2, 2, 0 }, new int[] { 0, 2, 0 });
 
-    static RTP[,] room_full = new RTP[3, 3] { { RTP.Room, RTP.Room, RTP.Room }, { RTP.Room, RTP.Room, RTP.Room }, { RTP.Room, RTP.Room, RTP.Room } }, // only room
-           corridor_straight = new RTP[3, 3] { { RTP.Wall, RTP.Corridor, RTP.Wall }, { RTP.Wall, RTP.Corridor, RTP.Wall }, { RTP.Wall, RTP.Corridor, RTP.Wall } }, //straight corridor 
-           corridor_curve = new RTP[3, 3] { { RTP.Wall, RTP.Wall, RTP.Wall }, { RTP.Corridor, RTP.Corridor, RTP.Wall }, { RTP.Wall, RTP.Corridor, RTP.Wall } }; // left corridor
     #endregion
 
     //#####################################################################################################
@@ -70,6 +75,8 @@ public class Main : MonoBehaviour
         roomTiles = new RoomTile[xDimension, yDimension];
         initializeRoomTypes();
         initializeRooms();
+
+        
 
         switch (operationMode) {
 
@@ -103,9 +110,8 @@ public class Main : MonoBehaviour
 
             //################################################################################################
             case OpMode.ClickOnly:
-
                 nextDirection = simplePath(); //SIMPLE MAP GENERATION
-                if (corridorNr > 5 + UnityEngine.Random.Range(3, 5)) {
+                if (corridorNr >  UnityEngine.Random.Range(0, 15)) {
                     nextDirection = simpleRoom();
                     corridorNr = 0;
                 }
@@ -116,9 +122,6 @@ public class Main : MonoBehaviour
 
                 if (Input.GetKeyDown(KeyCode.T)) //TEST
                 {
-                    //printRoomTileParts(RotateMatrix(corridor_curve));
-                    //RotateMatrix(corridor_curve);
-                    //printRoomTileParts(corridor_curve);
                     visualizeMap();
                 }
                    
@@ -148,17 +151,20 @@ public class Main : MonoBehaviour
                     }
                     corridorNr++;
 
-                    if (roomNr >= 5)
-                        roomNr = 0;
+                    //if (roomNr >= 5)
+                    //    roomNr = 0;
 
                     if (alwaysTrue == false) {
-                        int actMapScore = (int)getMapScore();
+                        int actMapScore = (int)getMapScoreNew();
 
                         mapNr++;
 
-                        if (actMapScore > 63000) {
-                            saveMap("Map_" + mapNr.ToString(), ".txt");
+                            
+                        if (actMapScore > bestMapScore) {
+                            if(mapNr > 20)
+                                saveMap("Map_" + mapNr.ToString() + "_" + actMapScore.ToString() , ".txt");
                             print("Gefunden! Map Score: " + actMapScore);
+                            bestMapScore = actMapScore;
                         }
                         print("Map NR: " + mapNr + " MapScore: " + actMapScore);
                     }
@@ -211,6 +217,29 @@ public class Main : MonoBehaviour
         }
         return totalScore;
     }
+    double getMapScoreNew()
+    {
+        double totalScore = 0;
+        for (int x = 0; x < xDimension; x++)
+        {
+            for (int y = 0; y < yDimension; y++)
+            {
+                switch(roomTiles[x,y].Type)
+                {
+                    case "room":
+                        totalScore += 2;
+                        break;
+                    case "corridor":
+                        totalScore += 1;
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        return totalScore;
+
+    }
 
     void initializeRooms()
     {
@@ -246,16 +275,16 @@ public class Main : MonoBehaviour
                 switch (direction)
                 {
                     case Dir.Up:
-                        roomToChange.RoomTileParts = RotateMatrix(corridor_straight);
+                        roomToChange.RoomTileParts = RotateMatrix(corridor_straight.Parts);
                         break;
                     case Dir.Right:
-                        roomToChange.RoomTileParts = corridor_curve;
+                        roomToChange.RoomTileParts = corridor_curve.Parts;
                         break;
                     case Dir.Down:
                         //NOTHING
                         break;
                     case Dir.Left:
-                        roomToChange.RoomTileParts = RotateMatrix(corridor_curve);
+                        roomToChange.RoomTileParts = RotateMatrix(corridor_curve.Parts);
                         break;
                 }
                 break;
@@ -263,13 +292,13 @@ public class Main : MonoBehaviour
                 switch (direction)
                 {
                     case Dir.Up:
-                        roomToChange.RoomTileParts = RotateMatrix(RotateMatrix(corridor_curve));
+                        roomToChange.RoomTileParts = RotateMatrix(RotateMatrix(corridor_curve.Parts));
                         break;
                     case Dir.Right:
-                        roomToChange.RoomTileParts = corridor_straight;
+                        roomToChange.RoomTileParts = corridor_straight.Parts;
                         break;
                     case Dir.Down:
-                        roomToChange.RoomTileParts = RotateMatrix(corridor_curve);
+                        roomToChange.RoomTileParts = RotateMatrix(corridor_curve.Parts);
                         break;
                     case Dir.Left:
                         //NOTHING
@@ -283,13 +312,13 @@ public class Main : MonoBehaviour
                         //NOTHING
                         break;
                     case Dir.Right:
-                        roomToChange.RoomTileParts = RotateMatrix(RotateMatrix(RotateMatrix(corridor_curve)));
+                        roomToChange.RoomTileParts = RotateMatrix(RotateMatrix(RotateMatrix(corridor_curve.Parts)));
                         break;
                     case Dir.Down:
-                        roomToChange.RoomTileParts = RotateMatrix(corridor_straight);
+                        roomToChange.RoomTileParts = RotateMatrix(corridor_straight.Parts);
                         break;
                     case Dir.Left:
-                        roomToChange.RoomTileParts = RotateMatrix(RotateMatrix(corridor_curve));
+                        roomToChange.RoomTileParts = RotateMatrix(RotateMatrix(corridor_curve.Parts));
                         break;
                 }
                 break;
@@ -297,23 +326,90 @@ public class Main : MonoBehaviour
                 switch (direction)
                 {
                     case Dir.Up:
-                        roomToChange.RoomTileParts = RotateMatrix(RotateMatrix(RotateMatrix(corridor_curve)));
+                        roomToChange.RoomTileParts = RotateMatrix(RotateMatrix(RotateMatrix(corridor_curve.Parts)));
                         break;
                     case Dir.Right:
                         //NOTHING
                         break;
                     case Dir.Down:
-                        roomToChange.RoomTileParts = corridor_curve;
+                        roomToChange.RoomTileParts = corridor_curve.Parts;
                         break;
                     case Dir.Left:
-                        roomToChange.RoomTileParts = corridor_straight;
+                        roomToChange.RoomTileParts = corridor_straight.Parts;
                         break;
                 }
                 break;
         }
 
     }
-    void setAllRoomConnections()
+    void setAttachedTile(roomDimension rDim, string type)
+    {
+        //Position attachedTile = new Position();
+        int xFind = -1, yFind = -1;
+        switch(type)
+        {
+            case "entrance":
+                xFind = rDim.XEntrance;
+                yFind = rDim.YEntrance;
+                break;
+            case "exit":
+                xFind = rDim.XExit;
+                yFind = rDim.YExit;
+                break;
+            default:
+                break;
+        }
+        print("choosing Attachment");
+        if( xFind > rDim.XRoomCornerMax)
+            roomTiles[xFind - 1, yFind].RoomTileParts = RotateMatrix(RotateMatrix(room_entrance.Parts));       
+        else if(xFind < rDim.XRoomCornerMin)
+            roomTiles[xFind + 1, yFind].RoomTileParts = room_entrance.Parts;
+        else if (yFind > rDim.YRoomCornerMax)
+            roomTiles[xFind, yFind - 1].RoomTileParts = RotateMatrix(room_entrance.Parts);
+        else if(yFind < rDim.YRoomCornerMin)
+            roomTiles[xFind, yFind + 1].RoomTileParts = RotateMatrix(RotateMatrix(RotateMatrix(room_entrance.Parts)));
+        //else
+        //No possible Attachment
+        //return attachedTile;
+    }
+    void setRoomConnectionsRoom(roomDimension rDim)
+    {
+        for (int x = rDim.XRoomCornerMin; x <= rDim.XRoomCornerMax; x++)
+        {
+            for (int y = rDim.YRoomCornerMin; y <= rDim.YRoomCornerMax; y++)
+            {
+                 if (x == rDim.XRoomCornerMin)
+                {
+
+                    if (y == rDim.YRoomCornerMin)
+                        roomTiles[x, y].RoomTileParts = room_corner.Parts;
+                    else if (y == rDim.YRoomCornerMax)
+                        roomTiles[x, y].RoomTileParts = RotateMatrix(room_corner.Parts);
+                    else
+                        roomTiles[x, y].RoomTileParts = room_border.Parts;
+
+                }
+                else if (x == rDim.XRoomCornerMax)
+                {
+                    if (y == rDim.YRoomCornerMin)
+                        roomTiles[x, y].RoomTileParts = RotateMatrix(RotateMatrix(RotateMatrix(room_corner.Parts)));
+                    else if (y == rDim.YRoomCornerMax)
+                        roomTiles[x, y].RoomTileParts = RotateMatrix(RotateMatrix(room_corner.Parts));
+                    else
+                        roomTiles[x, y].RoomTileParts = RotateMatrix(RotateMatrix(room_border.Parts));
+                }
+                else if (y == rDim.YRoomCornerMin)
+                    roomTiles[x, y].RoomTileParts = RotateMatrix(RotateMatrix(RotateMatrix(room_border.Parts)));
+                else if (y == rDim.YRoomCornerMax)
+                    roomTiles[x, y].RoomTileParts = RotateMatrix(room_border.Parts);
+                else
+                    roomTiles[x, y].RoomTileParts = room_full.Parts;
+            }
+        }
+        setAttachedTile(rDim, "entrance");
+        setAttachedTile(rDim, "exit");
+    }
+    void setAllRoomConnections() //?
     {
         for (int x = 0; x < xDimension; x++)
         {
@@ -336,6 +432,7 @@ public class Main : MonoBehaviour
             }
         }
     }
+
     void overwriteRoom(Room roomTypeFound, RoomTile roomToChange)
     {
         roomToChange.Type = roomTypeFound.Type;
@@ -374,17 +471,21 @@ public class Main : MonoBehaviour
             createdRooms.Add(rDim);
 
             calculateEmptyness();
-
+           
             roomExit.XNext = rDim.XExit;
             roomExit.YNext = rDim.YExit;
             roomExit.NextDirection = roomExit.NextDirection;
 
+            setRoomConnectionsRoom(rDim);
             //print ("x: " + roomExit [0] + " y: " + roomExit [1] + " emptyness: " + roomTiles [roomExit [0], roomExit [1]].Emptyness);
 
             return roomExit;
+
         } else {
+
             roomExit = nextDirection;
             return roomExit;
+
         }
 
     }
@@ -392,11 +493,15 @@ public class Main : MonoBehaviour
     roomDimension spaceforRoom(int xRoomSize, int yRoomSize)
     {
         roomDimension rDim = new roomDimension();
-
+        Room entranceTile = new Room();
         int xStart = nextDirection.XNext, yStart = nextDirection.YNext;
-
+        rDim.XEntrance = xStart;
+        rDim.YEntrance = yStart;
+        rDim.DirectionEntrance = nextDirection.NextDirection;
+        rDim.DirectionExit = nextDirection.NextDirection;
         switch (nextDirection.NextDirection) {
             case Dir.Up:
+                entranceTile.RoomTileParts = RotateMatrix(corridor_straight.Parts);
                 rDim.XRoomCornerMin = xStart - ((xRoomSize - 1) / 2);
                 rDim.XRoomCornerMax = xStart + ((xRoomSize - 1) / 2);
                 rDim.YRoomCornerMin = yStart + 1;
@@ -405,6 +510,7 @@ public class Main : MonoBehaviour
                 rDim.YExit = rDim.YRoomCornerMax;
                 break;
             case Dir.Right:
+                entranceTile.RoomTileParts = corridor_straight.Parts;
                 rDim.XRoomCornerMin = xStart + 1;
                 rDim.YRoomCornerMin = yStart - ((yRoomSize - 1) / 2);
                 rDim.XRoomCornerMax = xStart + xRoomSize;
@@ -413,6 +519,7 @@ public class Main : MonoBehaviour
                 rDim.YExit = yStart;
                 break;
             case Dir.Down:
+                entranceTile.RoomTileParts = RotateMatrix(corridor_straight.Parts);
                 rDim.YRoomCornerMin = yStart - yRoomSize;
                 rDim.XRoomCornerMax = xStart + ((xRoomSize - 1) / 2);
                 rDim.YRoomCornerMax = yStart - 1;
@@ -421,6 +528,7 @@ public class Main : MonoBehaviour
                 rDim.YExit = rDim.YRoomCornerMin;
                 break;
             case Dir.Left:
+                entranceTile.RoomTileParts = corridor_straight.Parts;
                 rDim.XRoomCornerMin = xStart - xRoomSize;
                 rDim.YRoomCornerMin = yStart - ((yRoomSize - 1) / 2);
                 rDim.XRoomCornerMax = xStart - 1;
@@ -441,6 +549,7 @@ public class Main : MonoBehaviour
             rDim.RoomPossible = false;
             return rDim;
         }
+
         if (rDim.XExit >= xDimension || rDim.YExit >= yDimension || rDim.XExit < 0 || rDim.YExit < 0) {
             rDim.RoomPossible = false;
             print("Exit corridor nicht moeglich!");
@@ -452,6 +561,7 @@ public class Main : MonoBehaviour
                     rDim.RoomPossible = false;
             }
         }
+        roomTiles[xStart, yStart].RoomTileParts = entranceTile.RoomTileParts;
 
         return rDim;
     }
@@ -636,7 +746,7 @@ public class Main : MonoBehaviour
         string path = @"C:\Users\Oliver\Desktop\" + fileName + fileEnding;
 
         string readText = File.ReadAllText(path);
-
+        print(readText);
         int s = 0;
         for (int y = yDimension - 1; y >= 0; y--) {
             for (int x = 0; x < xDimension; x++) {
@@ -676,6 +786,7 @@ public class Main : MonoBehaviour
             }
         return ret;
     }
+
     void printRoomTileParts(RTP[,] toPrint)
     {
         for (int i = 0; i < 3; ++i)
@@ -686,6 +797,7 @@ public class Main : MonoBehaviour
             }
         }
     }
+   
     void visualizeMap()
     {
         //destroyAll();
@@ -709,15 +821,15 @@ public class Main : MonoBehaviour
                                 break;
                             case RTP.Room:
 
-                                newMaterial.color = new Color(255, 100, 0);
+                                newMaterial.color = new Color(255, 0, 255);
                                 actTile.TileObject.GetComponent<MeshRenderer>().material = newMaterial;
-                                print("Room");
+                                //print("Room");
                                 break;
                             case RTP.Corridor:
 
                                 newMaterial.color = new Color(200, 255, 0);
                                 actTile.TileObject.GetComponent<MeshRenderer>().material = newMaterial;
-                                print("corridor");
+                                //print("Corridor");
                                 break;
                             default:
                                 print("nicht erkannt");
@@ -730,6 +842,7 @@ public class Main : MonoBehaviour
             }
         }
     }
+
     
 }
 

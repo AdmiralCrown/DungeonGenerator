@@ -143,7 +143,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 91f8ead67ea6449449cdb656f8bb1bb4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  openMapFileNr: 
+  openMapFileNr: 90
 --- !u!81 &1705854694
 AudioListener:
   m_ObjectHideFlags: 0
